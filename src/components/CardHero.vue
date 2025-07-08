@@ -1,25 +1,12 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { fetchWalletData, fetchWalletTxs } from '../api/blockstream';
 
 const props = defineProps<{ walletAddress: string }>()
 
 const queryKeyWallet = computed(() => ['walletData', props.walletAddress])
 const queryKeyTxs = computed(() => ['walletTxs', props.walletAddress])
-
-const fetchWalletData = async ({ queryKey }: { queryKey: any }) => {
-  const [_key, address] = queryKey
-  const res = await fetch(`https://blockstream.info/api/address/${address}`)
-  if (!res.ok) throw new Error('Network response was not ok')
-  return res.json()
-}
-
-const fetchWalletTxs = async ({ queryKey }: { queryKey: any }) => {
-  const [_key, address] = queryKey
-  const res = await fetch(`https://blockstream.info/api/address/${address}/txs`)
-  if (!res.ok) throw new Error('Network response was not ok')
-  return res.json()
-}
 
 const { data, isLoading, error } = useQuery({
   queryKey: queryKeyWallet,
@@ -38,6 +25,17 @@ const {
   staleTime: 1000 * 60 * 5,
   enabled: computed(() => !!props.walletAddress),
 })
+
+const copyAlert = ref(false)
+function copyToClipboard(text: string, showAlert = false) {
+  navigator.clipboard.writeText(text)
+  if (showAlert) {
+    copyAlert.value = true
+    setTimeout(() => {
+      copyAlert.value = false
+    }, 1200)
+  }
+}
 </script>
 
 <template>
@@ -72,7 +70,17 @@ const {
         <div v-else-if="error">Error: {{ error.message }}</div>
         <div v-else>
           <ul class="text-start">
-            <li><strong>Address:</strong> <br> {{ props.walletAddress }}</li>
+            <li>
+              <strong>Address:</strong> 
+                <br>
+               <span>{{ props.walletAddress }}</span>
+                <!-- <badge @click="copyToClipboard(props.walletAddress)" class="ml-2 px-1 py-1 bg-slate-600 rounded text-xs hover:bg-slate-500 cursor-pointer" title="Copy Address"> -->
+                  <span
+                @click="copyToClipboard(props.walletAddress, true)"
+                class="ml-2 px-2 py-1 bg-slate-600 rounded text-xs hover:bg-slate-500 cursor-pointer"
+                title="Copy Address"
+              >Copy</span>
+            </li>
             <li><strong>Number of Transactions:</strong> <br> {{ data.chain_stats.tx_count }}</li>
             <li>
               <strong>Total Received:</strong> <br> {{ data.chain_stats.funded_txo_sum }} satoshi
@@ -110,7 +118,7 @@ const {
             <ul class="text-start">
               <li v-for="tx in txs" :key="tx.txid">
                 <div class="p-2 mb-2 bg-gray-700 rounded">
-                  <strong>TxID:</strong> {{ tx.txid }}<br>
+                  <strong>TxID:</strong> <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-300">{{ tx.txid }}</a><br>
                   <strong>Confirmations:</strong> {{ tx.status.confirmed ? 'Yes' : 'No' }}<br>
                   <strong>Block Height:</strong> {{ tx.status.block_height || '-' }}<br>
                   <strong>Received Time:</strong> {{ tx.status.block_time ? new Date(tx.status.block_time *
@@ -125,10 +133,12 @@ const {
                   </ul>
                   <strong>Output Count:</strong> {{ tx.vout.length }}<br>
                   <strong>Output Addresses:</strong>
-                  <ul>
-                    <li v-for="(vout, idx) in tx.vout" :key="idx">
-                      {{ vout.scriptpubkey_address || '-' }}
-                    </li>
+                  <ul class="bg-slate-600 rounded">
+                    <div class="p-2">
+                      <li v-for="(vout, idx) in tx.vout" :key="idx" class="p-0">
+                        {{ vout.scriptpubkey_address || '-' }}
+                      </li>
+                    </div>
                   </ul>
                   <strong>Total Output Value:</strong>
                   {{tx.vout.reduce((sum: number, vout: any) => sum + vout.value, 0)}} satoshi<br>
@@ -140,6 +150,11 @@ const {
                 </div>
               </li>
             </ul>
+             <transition name="fade">
+              <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                TxID copied!
+              </div>
+            </transition>
           </div>
         </div>
       </div>
