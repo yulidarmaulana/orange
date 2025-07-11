@@ -4,8 +4,8 @@
 
 <template>
   <div class="">
-    <p class="text-orange-300 font-bold">
-      Orange is tracking wallet and transactions.
+    <p class="text-orange-300 font-bold text-start mb-2">
+      Orange.
     </p>
   </div>
 
