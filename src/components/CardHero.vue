@@ -1,14 +1,46 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
-import { fetchWalletData, fetchWalletTxs } from '../api/blockstream';
+import { fetchWalletData, fetchWalletTxs, fetchBTCtoUSD } from '../api/blockstream';
 import PaginationTx from './PaginationTx.vue';
 import Qrcode from 'qrcode.vue';
 
-const props = defineProps<{ walletAddress: string }>()
+const props = defineProps<{ 
+  walletAddress: string 
+  txs?: any[]
+  perPage?: number
+ }>()
 
 const queryKeyWallet = computed(() => ['walletData', props.walletAddress])
 const queryKeyTxs = computed(() => ['walletTxs', props.walletAddress])
+
+// Hitung final balance dalam BTC
+const finalBalanceBTC = computed(() => {
+  const { funded_txo_sum, spent_txo_sum } = data.value.chain_stats
+  return (funded_txo_sum - spent_txo_sum) / 100000000
+})
+
+// Ambil nilai tukar BTC ke USD via TanStack
+const { data: btcToUsdRate } = useQuery({
+  queryKey: ['btcToUsdRate'],
+  queryFn: fetchBTCtoUSD
+})
+
+// Konversi ke USD (pastikan data sudah ada)
+const finalBalanceUSD = computed(() => {
+  if (!btcToUsdRate.value) return 0
+  return finalBalanceBTC.value * btcToUsdRate.value
+})
+
+// formatter USD
+const formatUSD = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value)
+}
 
 const { data, isLoading, error } = useQuery({
   queryKey: queryKeyWallet,
@@ -73,7 +105,7 @@ function exportTxsToJSON(txs: any[]) {
 <template>
   <Suspense>
     <template #default>
-      <div class="bg-slate-800 text-white p-4 rounded-lg shadow-md">
+      <div class="bg-slate-50 text-white p-4 rounded-lg shadow-md">
         <!-- <h3>Bitcoin Wallet Info</h3> -->
         <div v-if="isLoading">
           <ul class="text-start">
@@ -83,7 +115,7 @@ function exportTxsToJSON(txs: any[]) {
             <li class="skeleton skeleton-line w-1/3"></li>
             <li class="skeleton skeleton-line w-1/3"></li>
           </ul>
-          <h3>Latest Transactions</h3>
+          <h3 class="text-orange-950">Latest Transactions</h3>
           <div class="transactions-scroll">
             <ul class="text-start">
               <li v-for="n in 5" :key="n">
@@ -104,9 +136,9 @@ function exportTxsToJSON(txs: any[]) {
           <ul class="text-start flex flex-col">
             <div class="">
             <li>
-              <strong>Address:</strong> 
+              <strong class="text-orange-950">Address:</strong> 
                 <br>
-               <span>{{ props.walletAddress }}</span>              
+               <span class="text-orange-950">{{ props.walletAddress }}</span>              
                 <span
                 @click="copyToClipboard(props.walletAddress, true)"
                 class="ml-2 px-2 py-1 bg-slate-600 rounded text-xs hover:bg-slate-500 cursor-pointer"
@@ -117,27 +149,33 @@ function exportTxsToJSON(txs: any[]) {
             </div>
           </ul>
 
-          <div class="flex flex-row flex-wrap gap-2">
+          <div class="flex flex-row gap-2">
             <div class="">
-              <div class="flex justify-start p-2 border border-gray-600 w-fit rounded-lg">
+              <div class="flex justify-start p-2 border border-gray-300 w-fit rounded-lg">
               <Qrcode :value="props.walletAddress" :size="120" class="rounded-lg shadow-md" />
               </div>
             </div>
 
-            <div class="">
-              <div class="border border-gray-600 rounded-lg p-2 flex flex-col text-start">
-                <strong>Final Balance </strong> <span> <span class="text-orange-300 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC</span>
+            <div class="basis-full">
+              <div class="border border-gray-300 rounded-lg p-2 flex flex-col text-start">
+                <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-300 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
               </div>
 
               <div class="grid grid-cols-3 gap-3 mt-3">
-                <div class="border border-gray-600 rounded-lg py-2 text-center mb-0 flex flex-col">
+                <div class="border border-gray-300 rounded-lg py-2 text-center mb-0 flex flex-col">
                   <!-- {{ data.chain_stats.funded_txo_sum }} satoshi -->
-                    <span class="text-md">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
-                    <strong class="text-xs">Total Received</strong>
+                  <strong class="text-xs text-orange-950">Total Received</strong>
+                    <span class="text-md text-orange-950">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
                 </div>
-              <div class="border border-gray-600 rounded-lg py-2 text-center flex flex-col">{{ data.chain_stats.tx_count }} <strong class="text-xs">Transactions</strong></div>
+              <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
+                <strong class="text-xs text-orange-950">Transactions</strong>
+                <span class="text-orange-950">{{ data.chain_stats.tx_count }}</span> 
+              </div>
             
-              <div class="border border-gray-600 rounded-lg py-2 text-center flex flex-col"><span>{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> <strong class="text-xs">Total Sent</strong></div>
+              <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
+                <strong class="text-xs text-orange-950">Total Sent</strong>
+                <span class="text-orange-950">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+              </div>
             </div>
             </div>
           </div>
@@ -153,7 +191,9 @@ function exportTxsToJSON(txs: any[]) {
             >Export JSON</button>
           </div>
 
-          <h3 class="mt-4">Latest Transactions</h3>
+          <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
+
+          <h3 class="mt-6 text-orange-950">Latest Transactions</h3>
           <div v-if="isLoadingTxs">
             <div class="transactions-scroll">
               <ul class="text-start">
@@ -173,7 +213,7 @@ function exportTxsToJSON(txs: any[]) {
           <div v-else-if="errorTxs">Error: {{ errorTxs.message }}</div>
           <div v-else class="transactions-scroll">
             <ul class="text-start">
-              <PaginationTx :txs="txs" :per-pages="5" v-slot="{tx}">
+              <PaginationTx :txs="txs" :perPages="3" v-slot="{tx}">
                 <div class="p-2 mb-2 bg-gray-700 rounded">
                   <strong>TxID:</strong> <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-300">{{ tx.txid }}</a><br>
                   <strong>Confirmations:</strong> {{ tx.status.confirmed ? 'Confirm' : 'Deny' }}<br>

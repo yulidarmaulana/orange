@@ -3,19 +3,21 @@ import { ref } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import CardHero from './components/CardHero.vue'
 
-const walletAddress = ref('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
+const walletAddress = ref('bc1qhayshz2hy9upvatmp0m02vj6eudk48w3p4nlh0')
+// const walletAddress = ref('')
+
 </script>
 
 <template>
   <div>
     <HelloWorld />
     <div class="mb-4">
-      <input
+      <!-- <input
         v-model="walletAddress"
         type="text"
         placeholder="Enter Bitcoin wallet address"
         class="border rounded px-2 py-1 w-full"
-      />
+      /> -->
     </div>
     <CardHero :wallet-address="walletAddress" />
   </div>

@@ -6,7 +6,7 @@ const props = defineProps<{
   perPage?: number
 }>()
 
-const perPage = props.perPage ?? 5
+const perPage = props.perPage ?? 3
 const page = ref(1)
 const totalPages = computed(() => Math.ceil(props.txs.length / perPage))
 
@@ -27,10 +27,10 @@ watch(
         <slot :tx="tx" />
       </li>
     </ul>
-    <div class="flex gap-2 mt-2 items-center text-center" v-if="totalPages > 1">
-      <button @click="page--" :disabled="page === 1" class="px-2 py-1 bg-slate-600 rounded text-xs">Prev</button>
-      <span>Page {{ page }} / {{ totalPages }}</span>
-      <button @click="page++" :disabled="page === totalPages" class="px-2 py-1 bg-slate-600 rounded text-xs">Next</button>
+    <div class="flex gap-2 mt-2 items-center text-center justify-center" v-if="totalPages > 1">
+      <button @click="page--" :disabled="page === 1" class="py-0 bg-slate-600 rounded text-xs">Prev</button>
+      <span class="text-orange-950">Page {{ page }} / {{ totalPages }}</span>
+      <button @click="page++" :disabled="page === totalPages" class="py-0 bg-slate-600 rounded text-xs">Next</button>
     </div>
   </div>
 </template>
