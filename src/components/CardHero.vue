@@ -4,6 +4,8 @@ import { computed, ref } from 'vue'
 import { fetchWalletData, fetchWalletTxs, fetchBTCtoUSD } from '../api/blockstream';
 import PaginationTx from './PaginationTx.vue';
 import Qrcode from 'qrcode.vue';
+import ModalTransaction from './ModalTransaction.vue';
+import { FileDown, FileJson } from 'lucide-vue-next';
 
 const props = defineProps<{ 
   walletAddress: string 
@@ -156,9 +158,9 @@ function exportTxsToJSON(txs: any[]) {
               </div>
             </div>
 
-            <div class="basis-full">
+          <div class="basis-full">
               <div class="border border-gray-300 rounded-lg p-2 flex flex-col text-start">
-                <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-300 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
+                <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
               </div>
 
               <div class="grid grid-cols-3 gap-3 mt-3">
@@ -183,12 +185,18 @@ function exportTxsToJSON(txs: any[]) {
           <div class="flex gap-2 my-2 justify-end">
             <button
               @click="exportTxsToCSV(txs)"
-              class="px-1 py-1 bg-slate-100 dark:bg-amber-400 rounded text-xs hover:bg-slate-500"
-            >Export CSV</button>
+              class="px-3 py-2 text-xs font-medium text-center flex gap-1 items-center align-middle text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+            <FileDown :size="16" />
+            Export CSV
+            </button>
             <button
               @click="exportTxsToJSON(txs)"
-              class="px-1 py-1 bg-slate-100 dark:bg-amber-400 rounded text-xs hover:bg-slate-500"
-            >Export JSON</button>
+              class="px-3 py-2 text-xs font-medium text-center flex gap-1 text-white bg-yellow-700 rounded-lg hover:bg-yellow-800 focus:ring-4 focus:outline-none focus:ring-yellow-300 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800"
+            >
+            <FileJson :size="16" />
+            Export JSON
+          </button>
           </div>
 
           <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
@@ -198,7 +206,7 @@ function exportTxsToJSON(txs: any[]) {
             <div class="transactions-scroll">
               <ul class="text-start">
                 <li v-for="n in 5" :key="n">
-                  <div class="p-2 mb-2 bg-gray-700 rounded">
+                  <div class="p-2 mb-2 bg-slate-200 rounded">
                     <div class="skeleton skeleton-line w-5/6 mb-1"></div>
                     <div class="skeleton skeleton-line w-2/3 mb-1"></div>
                     <div class="skeleton skeleton-line w-1/2 mb-1"></div>
@@ -210,16 +218,20 @@ function exportTxsToJSON(txs: any[]) {
               </ul>
             </div>
           </div>
+          
           <div v-else-if="errorTxs">Error: {{ errorTxs.message }}</div>
+
           <div v-else class="transactions-scroll">
             <ul class="text-start">
-              <PaginationTx :txs="txs" :perPages="3" v-slot="{tx}">
-                <div class="p-2 mb-2 bg-gray-700 rounded">
-                  <strong>TxID:</strong> <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-300">{{ tx.txid }}</a><br>
-                  <strong>Confirmations:</strong> {{ tx.status.confirmed ? 'Confirm' : 'Deny' }}<br>
-                  <strong>Received Time: </strong>
-                  <span v-if="tx.status.block_time">
-                     {{
+              <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
+                <div class="p-2 mb-2 bg-slate-200 rounded">
+                  <strong class="text-orange-950">TxID:</strong> <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-300">{{ tx.txid }}</a><br>
+                  <strong class="text-orange-950">Confirmations:</strong> <span class="text-orange-900">{{ tx.status.confirmed ? 'Confirm' : 'Deny' }}</span><br>
+                  <div class="flex justify-between">
+
+                    <strong class="text-orange-950">Received Time: </strong>
+                    <span class="text-orange-900" v-if="tx.status.block_time">
+                      {{
                       new Date(tx.status.block_time * 1000).toLocaleString('en-US', {
                         month: 'short',
                         day: '2-digit',
@@ -230,36 +242,13 @@ function exportTxsToJSON(txs: any[]) {
                       })
                     }}
                   </span>
-                    
-                  <!-- <strong>Block Height:</strong> {{ tx.status.block_height || '-' }}<br> -->
-                  <!-- <strong>Input Count:</strong> {{ tx.vin.length }}<br> -->
-                  <!-- <strong>Input Addresses:</strong> -->
-                  <!-- <ul>
-                    <li v-for="(vin, idx) in tx.vin" :key="idx">
-                      {{ vin.prevout?.scriptpubkey_address || '-' }}
-                    </li>
-                  </ul> -->
-                  <!-- <strong>Output Count:</strong> {{ tx.vout.length }}<br> -->
-                  <!-- <strong>Output Addresses:</strong> -->
-                  <!-- <ul class="bg-slate-600 rounded">
-                    <div class="p-2">
-                      <li v-for="(vout, idx) in tx.vout" :key="idx" class="p-0">
-                        {{ vout.scriptpubkey_address || '-' }}
-                      </li>
-                    </div>
-                  </ul> -->
-
-
-                  <!-- <strong>Total Output Value:</strong>
-                  {{tx.vout.reduce((sum: number, vout: any) => sum + vout.value, 0)}} satoshi<br> -->
-                  <!-- <strong>Total Input Value:</strong>
-                  {{tx.vin.reduce((sum: number, vin: any) => sum + (vin.prevout?.value || 0), 0)}} satoshi<br> -->
-                  <!-- <strong>Fee:</strong>
-                  {{tx.vin.reduce((sum: number, vin: any) => sum + (vin.prevout?.value || 0), 0) - tx.vout.reduce((sum:
-                    number, vout: any) => sum + vout.value, 0) }} satoshi -->
+                  <ModalTransaction  />
+                </div>
                 </div>
               </PaginationTx>
             </ul>
+
+
 
              <transition name="fade">
               <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">

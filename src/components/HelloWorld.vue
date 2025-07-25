@@ -4,7 +4,7 @@
 
 <template>
   <div class="">
-    <p class="text-orange-300 font-bold text-start mb-2">
+    <p class="text-orange-500 font-bold text-start mb-2">
       Orange.
     </p>
   </div>

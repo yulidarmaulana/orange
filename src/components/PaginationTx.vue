@@ -6,7 +6,7 @@ const props = defineProps<{
   perPage?: number
 }>()
 
-const perPage = props.perPage ?? 3
+const perPage = props.perPage ?? 5
 const page = ref(1)
 const totalPages = computed(() => Math.ceil(props.txs.length / perPage))
 
@@ -28,9 +28,9 @@ watch(
       </li>
     </ul>
     <div class="flex gap-2 mt-2 items-center text-center justify-center" v-if="totalPages > 1">
-      <button @click="page--" :disabled="page === 1" class="py-0 bg-slate-600 rounded text-xs">Prev</button>
+      <button @click="page--" :disabled="page === 1" class="px-2 py-1 text-xs font-medium text-center text-white bg-neutral-400 rounded-lg hover:bg-neutral-800 focus:ring-4 focus:outline-none focus:ring-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-700 dark:focus:ring-neutral-800">Prev</button>
       <span class="text-orange-950">Page {{ page }} / {{ totalPages }}</span>
-      <button @click="page++" :disabled="page === totalPages" class="py-0 bg-slate-600 rounded text-xs">Next</button>
+      <button @click="page++" :disabled="page === totalPages" class="px-2 py-1 text-xs font-medium text-center text-white bg-neutral-400 rounded-lg hover:bg-neutral-800 focus:ring-4 focus:outline-none focus:ring-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-700 dark:focus:ring-neutral-800">Next</button>
     </div>
   </div>
 </template>
