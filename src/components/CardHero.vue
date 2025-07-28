@@ -216,7 +216,7 @@ function exportTxsToJSON(txs: any[]) {
 
           <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
 
-          <h3 class="mt-6 text-orange-950">Latest Transactions</h3>
+          <h3 class="mt-6 text-orange-950 text-start">Latest Transactions</h3>
           <div v-if="isLoadingTxs">
             <div class="transactions-scroll">
               <ul class="text-start">
@@ -239,7 +239,7 @@ function exportTxsToJSON(txs: any[]) {
           <div v-else class="transactions-scroll">
             <ul class="text-start">
               <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
-                <div class="p-2 mb-2 bg-slate-200 rounded">
+                <div class="p-2 mb-2 bg-slate-100 rounded-md">
                   <div class="flex justify-between items-start">
                     <div class="flex-1">
                       <strong class="text-orange-950">TxID:</strong> 
@@ -311,28 +311,23 @@ function exportTxsToJSON(txs: any[]) {
 
                           <div class="" v-if="tx.version">
                             <span class="font-medium text-gray-700">Version:</span>
-                            <span class="ml-2">{{ tx.version }}</span>
-                          </div>
-
-                          <div v-if="tx.fee">
-                            <span class="font-medium text-gray-700">Fee:</span>
-                            <span class="ml-2">{{ (tx.fee / 100000000).toFixed(8) }} btc</span>
+                            <span class="ml-1">{{ tx.version }}</span>
                           </div>
 
                           <div v-if="tx.status.block_time" class="text-sm mt-2">
                             <span class="font-medium text-gray-700">Time:</span>
-                            <span class="ml-2">{{ new Date(tx.status.block_time * 1000).toLocaleString() }}</span>
+                            <span class="ml-1">{{ new Date(tx.status.block_time * 1000).toLocaleString() }}</span>
                           </div>
 
                           <div v-if="tx.weight" class="text-sm mt-2">
                             <span class="font-medium text-gray-700">Weight:</span>
-                            <span class="ml-2">{{ tx.weight }} Units</span>
+                            <span class="ml-1">{{ tx.weight }} Units</span>
                           </div>
 
-                          <div v-if="tx.status.block_hash" class="text-sm mt-2">
+                          <!-- <div v-if="tx.status.block_hash" class="text-sm mt-2">
                             <span class="font-medium text-gray-700">Block Hash:</span>
-                            <span class="ml-2">{{ tx.status.block_hash }}</span>
-                          </div>
+                            <span class="ml-1">{{ tx.status.block_hash }}</span>
+                          </div> -->
                         </div>
 
                         <!-- Transaction Summary -->

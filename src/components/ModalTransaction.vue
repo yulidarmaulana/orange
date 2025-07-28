@@ -53,7 +53,7 @@
               <div class="mt-1 flex-shrink-0 flex justify-end gap-3">
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md border border-gray-300 bg-zinc-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  class="inline-flex justify-center rounded-md border border-gray-300 bg-zinc-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-500 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   @click="closeModal"
                 >
                   Close
