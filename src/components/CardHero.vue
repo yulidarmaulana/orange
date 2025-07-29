@@ -167,37 +167,40 @@ function exportTxsToJSON(txs: any[]) {
             </div>
           </ul>
 
-          <div class="flex flex-row gap-2">
+          <div class="flex flex-col md:flex-row gap-2">
             <div class="">
-              <div class="flex justify-start p-2 border border-gray-300 w-fit rounded-lg">
+              <div class="flex justify-center p-2 border border-gray-300 rounded-lg">
               <Qrcode :value="props.walletAddress" :size="120" class="rounded-lg shadow-md" />
               </div>
             </div>
 
-          <div class="basis-full">
-              <div class="border border-gray-300 rounded-lg p-2 flex flex-col text-start">
-                <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
-              </div>
-
-              <div class="grid grid-cols-3 gap-3 mt-3">
-                <div class="border border-gray-300 rounded-lg py-2 text-center mb-0 flex flex-col">
-                  <strong class="text-xs text-orange-950">Total Received</strong>
-                    <span class="text-md text-orange-950 px-2">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+            <div class="basis-full">
+                <div class="border border-gray-300 rounded-lg p-2 flex flex-col text-start">
+                  <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
                 </div>
-              <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
-                <strong class="text-xs text-orange-950">Transactions</strong>
-                <span class="text-orange-950 px-2">{{ data.chain_stats.tx_count }}</span> 
-              </div>
-            
-              <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
-                <strong class="text-xs text-orange-950">Total Sent</strong>
-                <span class="text-orange-950 px-2">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
-              </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                  <div class="border border-gray-300 rounded-lg py-2 text-center mb-0 flex flex-col">
+                    <strong class="text-xs text-orange-950">Total Received</strong>
+                      <span class="text-md text-orange-950 px-2">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                  </div>
+                  <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
+                    <strong class="text-xs text-orange-950">Transactions</strong>
+                    <span class="text-orange-950 px-2">{{ data.chain_stats.tx_count }}</span> 
+                  </div>
+              
+                  <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
+                    <strong class="text-xs text-orange-950">Total Sent</strong>
+                    <span class="text-orange-950 px-2">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                  </div>
+          </div>
             </div>
-            </div>
+          
           </div>
 
-          <div class="flex gap-2 my-2 justify-end">
+          
+
+          <div class="flex gap-2 my-2 justify-start">
             <button
               @click="exportTxsToCSV(txs)"
               class="px-3 py-2 text-xs font-medium text-center flex gap-1 items-center align-middle text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
