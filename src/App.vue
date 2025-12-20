@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import CardHero from './components/CardHero.vue'
+import DarkModeToggle from './components/DarkModeToggle.vue'
 
 const walletAddress = ref('')
 // const walletAddress = ref('')
@@ -10,7 +11,10 @@ const walletAddress = ref('')
 
 <template>
   <div>
-    <HelloWorld />
+    <div class="flex justify-between align-center">
+      <HelloWorld />
+      <DarkModeToggle />
+    </div>
     <div class="mb-4 bg-slate-50 text-white p-2 rounded-lg shadow-xs">
       <input
         v-model="walletAddress"
