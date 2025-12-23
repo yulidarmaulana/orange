@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
-import { fetchWalletData, fetchWalletTxs, fetchBTCtoUSD } from '../api/blockstream';
+import { fetchWalletData, fetchWalletTxs, fetchBTCRates } from '../api/blockstream';
 import PaginationTx from './PaginationTx.vue';
 import Qrcode from 'qrcode.vue';
 import ModalTransaction from './ModalTransaction.vue';
+import CurrencySelector from './CurrencySelector.vue';
 import { FileDown, FileJson, Copy, ExternalLink } from 'lucide-vue-next';
+import { formatCurrency } from '../utils/currency';
 
 const props = defineProps<{ 
   walletAddress: string 
@@ -22,26 +24,24 @@ const finalBalanceBTC = computed(() => {
   return (funded_txo_sum - spent_txo_sum) / 100000000
 })
 
-// Ambil nilai tukar BTC ke USD via TanStack
-const { data: btcToUsdRate } = useQuery({
-  queryKey: ['btcToUsdRate'],
-  queryFn: fetchBTCtoUSD
+// Selected currency
+const selectedCurrency = ref('usd')
+
+// Ambil nilai tukar BTC ke multiple currencies via TanStack
+const { data: btcRates } = useQuery({
+  queryKey: ['btcRates'],
+  queryFn: fetchBTCRates
 })
 
-// Konversi ke USD (pastikan data sudah ada)
-const finalBalanceUSD = computed(() => {
-  if (!btcToUsdRate.value) return 0
-  return finalBalanceBTC.value * btcToUsdRate.value
+// Konversi ke currency yang dipilih (pastikan data sudah ada)
+const finalBalanceFiat = computed(() => {
+  if (!btcRates.value || !btcRates.value[selectedCurrency.value]) return 0
+  return finalBalanceBTC.value * btcRates.value[selectedCurrency.value]
 })
 
-// formatter USD
-const formatUSD = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value)
+// formatter untuk currency yang dipilih
+const formatSelectedCurrency = (value: number): string => {
+  return formatCurrency(value, selectedCurrency.value)
 }
 
 // formatter BTC
@@ -125,7 +125,7 @@ function exportTxsToJSON(txs: any[]) {
 <template>
   <Suspense>
     <template #default>
-      <div class="bg-slate-50 text-white p-4 rounded-lg shadow-md">
+      <div class="bg-slate-50 dark:bg-slate-700 text-white p-4 rounded-lg shadow-md">
         <div v-if="isLoading">
           <ul class="text-start">
             <li class="skeleton skeleton-line w-2/3"></li>
@@ -155,12 +155,12 @@ function exportTxsToJSON(txs: any[]) {
           <ul class="text-start flex flex-col">
             <div class="">
             <li>
-              <strong class="text-orange-950">Address:</strong> 
+              <strong class="text-orange-950 dark:text-orange-50">Address:</strong> 
                 <br>
-               <span class="text-orange-950">{{ props.walletAddress }}</span>              
+               <span class="text-orange-950 dark:text-orange-50">{{ props.walletAddress }}</span>              
                 <span
                 @click="copyToClipboard(props.walletAddress, true)"
-                class="ml-2 px-2 py-1 bg-slate-600 rounded text-xs hover:bg-slate-500 cursor-pointer"
+                class="ml-2 px-2 py-1 bg-slate-600 dark:bg-slate-500 rounded text-xs hover:bg-slate-500 cursor-pointer"
                 title="Copy Address"
                 >Copy</span>
             </li>
@@ -175,25 +175,33 @@ function exportTxsToJSON(txs: any[]) {
             </div>
 
             <div class="basis-full">
-                <div class="border border-gray-300 rounded-lg p-2 flex flex-col text-start">
-                  <strong class="text-orange-950">Final Balance </strong> <span class="text-orange-950"> <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC |  {{ formatUSD(finalBalanceUSD) }}</span>
+                <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 flex flex-col text-start gap-2">
+                  <div class="flex items-center justify-between">
+                    <strong class="text-orange-950 dark:text-orange-100">Final Balance</strong>
+                    <div class="w-32">
+                      <CurrencySelector v-model="selectedCurrency" />
+                    </div>
+                  </div>
+                  <span class="text-orange-950 dark:text-orange-100">
+                    <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC | {{ formatSelectedCurrency(finalBalanceFiat) }}
+                  </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                   <div class="border border-gray-300 rounded-lg py-2 text-center mb-0 flex flex-col">
-                    <strong class="text-xs text-orange-950">Total Received</strong>
-                      <span class="text-md text-orange-950 px-2">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                    <strong class="text-xs text-orange-950 dark:text-orange-100">Total Received</strong>
+                      <span class="text-md text-orange-950 dark:text-orange-100 px-2">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
                   </div>
                   <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
-                    <strong class="text-xs text-orange-950">Transactions</strong>
-                    <span class="text-orange-950 px-2">{{ data.chain_stats.tx_count }}</span> 
+                    <strong class="text-xs text-orange-950 dark:text-orange-100">Transactions</strong>
+                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ data.chain_stats.tx_count }}</span> 
                   </div>
               
                   <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
-                    <strong class="text-xs text-orange-950">Total Sent</strong>
-                    <span class="text-orange-950 px-2">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                    <strong class="text-xs text-orange-950 dark:text-orange-100">Total Sent</strong>
+                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
                   </div>
-          </div>
+                </div>
             </div>
           
           </div>
@@ -219,7 +227,7 @@ function exportTxsToJSON(txs: any[]) {
 
           <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
 
-          <h3 class="mt-6 text-orange-950 text-start">Latest Transactions</h3>
+          <h3 class="mt-6 text-orange-950 dark:text-orange-50 text-start">Latest Transactions</h3>
           <div v-if="isLoadingTxs">
             <div class="transactions-scroll">
               <ul class="text-start">
@@ -239,172 +247,164 @@ function exportTxsToJSON(txs: any[]) {
           
           <div v-else-if="errorTxs">Error: {{ errorTxs.message }}</div>
 
-          <div v-else class="transactions-scroll">
-            <ul class="text-start">
-              <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
-                <div class="p-2 mb-2 bg-slate-100 rounded-md">
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                      <strong class="text-orange-950">TxID:</strong> 
-                      <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-600 hover:text-blue-800">
-                        {{ tx.txid.substring(0, 30) }}...
-                      </a>
-                    </div>
+          <div v-else>
+            <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
+              <div class="p-2 mb-2 bg-slate-100 dark:bg-slate-700 rounded-md">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <strong class="text-orange-950 dark:text-orange-100">TxID:</strong> 
+                    <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-600 hover:text-blue-800">
+                      {{ tx.txid.substring(0, 30) }}...
+                    </a>
                   </div>
-                  
-                  <strong class="text-orange-950">Status:</strong> 
-                  <span :class="tx.status.confirmed ? 'text-green-600' : 'text-orange-600'">
-                    {{ tx.status.confirmed ? 'Confirmed' : 'Unconfirmed' }}
-                  </span><br>
-                  
-                  <div class="flex">
-                    <strong class="text-orange-950">Time: </strong>
-                      <span class="text-orange-900 ms-1" v-if="tx.status.block_time">
-                      {{
-                        new Date(tx.status.block_time * 1000).toLocaleString('en-US', {
-                          weekday: 'long',
-                          month: 'long',
-                          day: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true,
-                        })
-                      }}
-                      </span>
-                    <span v-else class="text-gray-500">Pending</span>
-                    <!-- <span v-if="tx.status.block_size" class="text-orange-900 ms-1">{{ tx.status.block_size }} bytes</span> -->
-                  </div>
-                  
+                </div>
+                
+                <strong class="text-orange-950 dark:text-orange-100">Status:</strong> 
+                <span :class="tx.status.confirmed ? 'text-green-600' : 'text-orange-600'">
+                  {{ tx.status.confirmed ? 'Confirmed' : 'Unconfirmed' }}
+                </span><br>
+                
+                <div class="flex">
+                  <strong class="text-orange-950 dark:text-orange-100">Time: </strong>
+                    <span class="text-orange-900 dark:text-orange-200 ms-1" v-if="tx.status.block_time">
+                    {{
+                      new Date(tx.status.block_time * 1000).toLocaleString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })
+                    }}
+                    </span>
+                  <span v-else class="text-gray-500">Pending</span>
+                </div>
+                
 
-                   <!-- Modal Component Integration -->
-                    <ModalTransaction>
-                      <!-- Content inside modal -->
-                      <div class="space-y-4">
-                        <!-- Basic Info -->
-                        <div class="border-b pb-4">
-                          <div class="mb-2">
-                            <span class="text-sm font-medium text-gray-700">Transaction ID:</span>
-                            <div class="flex items-center gap-2 mt-1">
-                              <code class="text-xs bg-gray-100 p-2 rounded font-mono break-all w-full">{{ tx.txid }}</code>
-                              <button @click="copyToClipboard(tx.txid, true)" class="p-1 hover:bg-gray-200 rounded flex-shrink-0">
-                                <Copy :size="16" class="text-gray-600" />
-                              </button>
-                            </div>
+                 <!-- Modal Component Integration -->
+                  <ModalTransaction>
+                    <!-- Content inside modal -->
+                    <div class="space-y-4">
+                      <!-- Basic Info -->
+                      <div class="border-b pb-4">
+                        <div class="mb-2">
+                          <span class="text-sm font-medium text-gray-700">Transaction ID:</span>
+                          <div class="flex items-center gap-2 mt-1">
+                            <code class="text-xs bg-gray-100 p-2 rounded font-mono break-all w-full">{{ tx.txid }}</code>
+                            <button @click="copyToClipboard(tx.txid, true)" class="p-1 hover:bg-gray-200 rounded flex-shrink-0">
+                              <Copy :size="16" class="text-gray-600" />
+                            </button>
                           </div>
-                          
-                          <div class="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span class="font-medium text-gray-700">Status:</span>
-                              <span :class="tx.status.confirmed ? 'text-green-600' : 'text-orange-600'" class="ml-2">
-                                {{ tx.status.confirmed ? 'Confirmed' : 'Unconfirmed' }}
-                              </span>
-                            </div>
-
-                            <div v-if="tx.status.block_height">
-                              <span class="font-medium text-gray-700">Block:</span>
-                              <span class="ml-2">{{ tx.status.block_height.toLocaleString() }}</span>
-                            </div>
-
-                            <div v-if="tx.size">
-                              <span class="font-medium text-gray-700">Size:</span>
-                              <span class="ml-2">{{ tx.size }} bytes</span>
-                            </div>
-                          </div>
-
-                          <div class="" v-if="tx.version">
-                            <span class="font-medium text-gray-700">Version:</span>
-                            <span class="ml-1">{{ tx.version }}</span>
-                          </div>
-
-                          <div v-if="tx.status.block_time" class="text-sm mt-2">
-                            <span class="font-medium text-gray-700">Time:</span>
-                            <span class="ml-1">{{ new Date(tx.status.block_time * 1000).toLocaleString() }}</span>
-                          </div>
-
-                          <div v-if="tx.weight" class="text-sm mt-2">
-                            <span class="font-medium text-gray-700">Weight:</span>
-                            <span class="ml-1">{{ tx.weight }} Units</span>
-                          </div>
-
-                          <!-- <div v-if="tx.status.block_hash" class="text-sm mt-2">
-                            <span class="font-medium text-gray-700">Block Hash:</span>
-                            <span class="ml-1">{{ tx.status.block_hash }}</span>
-                          </div> -->
                         </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span class="font-medium text-gray-700">Status:</span>
+                            <span :class="tx.status.confirmed ? 'text-green-600' : 'text-orange-600'" class="ml-2">
+                              {{ tx.status.confirmed ? 'Confirmed' : 'Unconfirmed' }}
+                            </span>
+                          </div>
 
-                        <!-- Transaction Summary -->
-                        <div class="grid grid-cols-3 gap-3">
-                          <div class="bg-blue-50 p-3 rounded text-center">
-                            <div class="text-xs text-blue-600 font-medium">Input</div>
-                            <div class="text-sm font-bold">{{ formatBTC(getTxInputTotal(tx)) }} BTC</div>
+                          <div v-if="tx.status.block_height">
+                            <span class="font-medium text-gray-700">Block:</span>
+                            <span class="ml-2">{{ tx.status.block_height.toLocaleString() }}</span>
                           </div>
-                          <div class="bg-green-50 p-3 rounded text-center">
-                            <div class="text-xs text-green-600 font-medium">Output</div>
-                            <div class="text-sm font-bold text-green-800">{{ formatBTC(getTxOutputTotal(tx)) }} BTC</div>
-                          </div>
-                          <div class="bg-orange-50 p-3 rounded text-center">
-                            <div class="text-xs text-orange-600 font-medium">Fee</div>
-                            <div class="text-sm font-bold text-orange-800">{{ formatBTC(getTxFee(tx)) }} BTC</div>
+
+                          <div v-if="tx.size">
+                            <span class="font-medium text-gray-700">Size:</span>
+                            <span class="ml-2">{{ tx.size }} bytes</span>
                           </div>
                         </div>
 
-                        <!-- Inputs -->
-                        <div v-if="tx.vin && tx.vin.length > 0">
-                          <h4 class="font-medium text-gray-900 mb-2">Inputs ({{ tx.vin.length }})</h4>
-                          <div class="max-h-32 overflow-y-auto space-y-2">
-                            <div v-for="(input, index) in tx.vin.slice(0, 3)" :key="index" class="bg-gray-50 p-2 rounded text-xs">
+                        <div class="" v-if="tx.version">
+                          <span class="font-medium text-gray-700">Version:</span>
+                          <span class="ml-1">{{ tx.version }}</span>
+                        </div>
+
+                        <div v-if="tx.status.block_time" class="text-sm mt-2">
+                          <span class="font-medium text-gray-700">Time:</span>
+                          <span class="ml-1">{{ new Date(tx.status.block_time * 1000).toLocaleString() }}</span>
+                        </div>
+
+                        <div v-if="tx.weight" class="text-sm mt-2">
+                          <span class="font-medium text-gray-700">Weight:</span>
+                          <span class="ml-1">{{ tx.weight }} Units</span>
+                        </div>
+                      </div>
+
+                      <!-- Transaction Summary -->
+                      <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-blue-50 p-3 rounded text-center">
+                          <div class="text-xs text-blue-600 font-medium">Input</div>
+                          <div class="text-sm font-bold">{{ formatBTC(getTxInputTotal(tx)) }} BTC</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded text-center">
+                          <div class="text-xs text-green-600 font-medium">Output</div>
+                          <div class="text-sm font-bold text-green-800">{{ formatBTC(getTxOutputTotal(tx)) }} BTC</div>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded text-center">
+                          <div class="text-xs text-orange-600 font-medium">Fee</div>
+                          <div class="text-sm font-bold text-orange-800">{{ formatBTC(getTxFee(tx)) }} BTC</div>
+                        </div>
+                      </div>
+
+                      <!-- Inputs -->
+                      <div v-if="tx.vin && tx.vin.length > 0">
+                        <h4 class="font-medium text-gray-900 mb-2">Inputs ({{ tx.vin.length }})</h4>
+                        <div class="max-h-32 overflow-y-auto space-y-2">
+                          <div v-for="(input, index) in tx.vin.slice(0, 3)" :key="index" class="bg-gray-50 p-2 rounded text-xs">
                               <div class="font-mono break-all">{{ input.txid }}:{{ input.vout }}</div>
                               <div v-if="input.prevout" class="mt-1">
                                 <div class="text-gray-600">{{ input.prevout.scriptpubkey_address || 'N/A' }}</div>
-                                  <div class="font-medium">{{ formatBTC(input.prevout.value) }} BTC | <span class="text-gray-500">{{ formatUSD(input.prevout.value / 100000000 * (btcToUsdRate || 0)) }}</span></div>
+                                  <div class="font-medium">{{ formatBTC(input.prevout.value) }} BTC | <span class="text-gray-500">{{ formatSelectedCurrency(input.prevout.value / 100000000 * (btcRates?.[selectedCurrency] || 0)) }}</span></div>
                               </div>
-                            </div>
-                            <div v-if="tx.vin.length > 3" class="text-xs text-gray-500 text-center">
-                              ... and {{ tx.vin.length - 3 }} more inputs
-                            </div>
                           </div>
-                        </div>
-
-                        <!-- Outputs -->
-                        <div v-if="tx.vout && tx.vout.length > 0">
-                          <h4 class="font-medium text-gray-900 mb-2">Outputs ({{ tx.vout.length }})</h4>
-                          <div class="max-h-32 overflow-y-auto space-y-2">
-                            <div v-for="(output, index) in tx.vout.slice(0, 3)" :key="index" class="bg-gray-50 p-2 rounded text-xs">
-                              <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                  <div class="font-mono break-all">{{ output.scriptpubkey_address || 'N/A' }}</div>
-                                  <div class="text-gray-600">{{ output.scriptpubkey_type || 'Unknown' }}</div>
-                                </div>
-                                <div class="text-right ml-2">
-                                  <div class="font-medium"><span class="text-orange-500">{{ formatBTC(output.value) }}</span> BTC</div>
-                                  <div class="text-gray-500">{{ formatUSD(output.value / 100000000 * (btcToUsdRate || 0)) }}</div>
-                                </div>
-                              </div>
-                            </div>
-                            <div v-if="tx.vout.length > 3" class="text-xs text-gray-500 text-center">
-                              ... and {{ tx.vout.length - 3 }} more outputs
-                            </div>
+                          <div v-if="tx.vin.length > 3" class="text-xs text-gray-500 text-center">
+                            ... and {{ tx.vin.length - 3 }} more inputs
                           </div>
-                        </div>
-
-                        <!-- External Link -->
-                        <div class="pt-4 border-t">
-                          <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" 
-                             class="inline-flex items-center gap-2 font-semibold text-blue-600 hover:text-blue-800 text-sm">
-                            <ExternalLink :size="16" />
-                            View on Blockstream Explorer
-                          </a>
                         </div>
                       </div>
-                    </ModalTransaction>
+
+                      <!-- Outputs -->
+                      <div v-if="tx.vout && tx.vout.length > 0">
+                        <h4 class="font-medium text-gray-900 mb-2">Outputs ({{ tx.vout.length }})</h4>
+                        <div class="max-h-32 overflow-y-auto space-y-2">
+                          <div v-for="(output, index) in tx.vout.slice(0, 3)" :key="index" class="bg-gray-50 p-2 rounded text-xs">
+                            <div class="flex justify-between items-start">
+                              <div class="flex-1">
+                                <div class="font-mono break-all">{{ output.scriptpubkey_address || 'N/A' }}</div>
+                                <div class="text-gray-600">{{ output.scriptpubkey_type || 'Unknown' }}</div>
+                              </div>
+                              <div class="text-right ml-2">
+                                <div class="font-medium"><span class="text-orange-500">{{ formatBTC(output.value) }}</span> BTC</div>
+                                <div class="text-gray-500">{{ formatSelectedCurrency(output.value / 100000000 * (btcRates?.[selectedCurrency] || 0)) }}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div v-if="tx.vout.length > 3" class="text-xs text-gray-500 text-center">
+                            ... and {{ tx.vout.length - 3 }} more outputs
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- External Link -->
+                      <div class="pt-4 border-t">
+                        <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" 
+                           class="inline-flex items-center gap-2 font-semibold text-blue-600 hover:text-blue-800 text-sm">
+                          <ExternalLink :size="16" />
+                          View on Blockstream Explorer
+                        </a>
+                      </div>
+                    </div>
+                  </ModalTransaction>
                 </div>
-              </PaginationTx>
-            </ul>
+            </PaginationTx>
 
              <transition name="fade">
-              <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-                Copied to clipboard!
+              <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-orange-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                Copied Address to clipboard!
               </div>
              </transition>
           </div>
@@ -422,7 +422,7 @@ function exportTxsToJSON(txs: any[]) {
 .transactions-scroll {
   max-height: 400px;
   overflow-y: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
   padding-right: 8px;
 }
 .skeleton {

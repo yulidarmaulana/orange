@@ -15,7 +15,7 @@ const walletAddress = ref('')
       <HelloWorld />
       <DarkModeToggle />
     </div>
-    <div class="mb-4 bg-slate-50 text-white p-2 rounded-lg shadow-xs">
+    <div class="mb-4 bg-slate-50 dark:bg-slate-700 text-white p-2 rounded-lg shadow-xs">
       <input
         v-model="walletAddress"
         type="text"

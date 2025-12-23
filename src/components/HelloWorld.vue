@@ -2,8 +2,8 @@
 </script>
 
 <template>
-  <div class="">
-    <p class="text-orange-500 flex justify-between font-bold text-start align-center my-auto">
+  <div class="my-auto">
+    <p class="text-orange-500 flex justify-between font-bold text-start align-center">
       Orange.
     </p>
   </div>

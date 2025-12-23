@@ -37,8 +37,8 @@ onMounted(() => {
     aria-label="Toggle Dark Mode"
   >
     <!-- Show Moon in Light Mode (to switch to Dark) -->
-    <Moon v-if="!isDark" class="w-6 h-6 text-slate-700" />
+    <Moon v-if="!isDark" class="w-5 h-5 text-slate-700" />
     <!-- Show Sun in Dark Mode (to switch to Light) -->
-    <Sun v-else class="w-6 h-6 text-yellow-400" />
+    <Sun v-else class="w-5 h-5 text-yellow-400" />
   </button>
 </template>

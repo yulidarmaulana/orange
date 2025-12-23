@@ -2,7 +2,7 @@
   <button
     type="button"
     @click="openModal"
-    class="rounded-lg px-2 me-auto mt-1 flex gap-1 align-middle py-1 text-xs font-medium text-center text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:bg-gray-500 dark:hover:bg-gray-600 dark:focus:ring-gray-700
+    class="rounded-lg px-2 me-auto mt-1 flex gap-1 align-middle py-1 text-xs font-medium text-center text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-neutral-300 dark:bg-neutral-500 dark:hover:bg-neutral-600 dark:focus:ring-neutral-700
 "
   >
   <Eye :size="16" />
@@ -53,7 +53,7 @@
               <div class="mt-1 flex-shrink-0 flex justify-end gap-3">
                 <button
                   type="button"
-                  class="inline-flex justify-center rounded-md border border-gray-300 bg-zinc-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-500 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  class="inline-flex justify-center rounded-md border text-white border-orange-300 bg-orange-600 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-orange-500 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   @click="closeModal"
                 >
                   Close
