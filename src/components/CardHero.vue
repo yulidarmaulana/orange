@@ -158,11 +158,13 @@ function exportTxsToJSON(txs: any[]) {
               <strong class="text-orange-950 dark:text-orange-50">Address:</strong> 
                 <br>
                <span class="text-orange-950 dark:text-orange-50">{{ props.walletAddress }}</span>              
-                <span
+                <button
                 @click="copyToClipboard(props.walletAddress, true)"
-                class="ml-2 px-2 py-1 bg-slate-600 dark:bg-slate-500 rounded text-xs hover:bg-slate-500 cursor-pointer"
+                class="ml-2 p-2 bg-slate-300 dark:bg-slate-500 rounded hover:bg-slate-500 dark:hover:bg-slate-400 cursor-pointer transition-colors"
                 title="Copy Address"
-                >Copy</span>
+                >
+                  <Copy :size="12" class="text-orange-950 dark:text-orange-50" />
+                </button>
             </li>
             </div>
           </ul>
@@ -249,7 +251,7 @@ function exportTxsToJSON(txs: any[]) {
 
           <div v-else>
             <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
-              <div class="p-2 mb-2 bg-slate-100 dark:bg-slate-700 rounded-md">
+              <div class="p-2 mb-2 bg-slate-100 border border-gray-300 dark:bg-slate-600 rounded-md dark:border dark:border-gray-600">
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <strong class="text-orange-950 dark:text-orange-100">TxID:</strong> 

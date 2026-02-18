@@ -39,7 +39,7 @@
             >
               <DialogTitle
                 as="h3"
-                class="text-lg font-medium leading-6 text-gray-900 flex-shrink-0"
+                class="text-lg font-semibold leading-6 text-gray-900 flex-shrink-0"
               >
                 Transaction Details
               </DialogTitle>
