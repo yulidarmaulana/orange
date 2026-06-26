@@ -8,10 +8,10 @@ const props = defineProps<{
 
 const perPage = props.perPage ?? 5
 const page = ref(1)
-const totalPages = computed(() => Math.ceil(props.txs.length / perPage))
+const totalPages = computed(() => Math.ceil((props.txs || []).length / perPage))
 
 const pagedTxs = computed(() =>
-  props.txs.slice((page.value - 1) * perPage, page.value * perPage)
+  (props.txs || []).slice((page.value - 1) * perPage, page.value * perPage)
 )
 
 watch(

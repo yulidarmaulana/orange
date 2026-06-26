@@ -20,6 +20,7 @@ const queryKeyTxs = computed(() => ['walletTxs', props.walletAddress])
 
 // Hitung final balance dalam BTC
 const finalBalanceBTC = computed(() => {
+  if (!data.value || !data.value.chain_stats) return 0
   const { funded_txo_sum, spent_txo_sum } = data.value.chain_stats
   return (funded_txo_sum - spent_txo_sum) / 100000000
 })
