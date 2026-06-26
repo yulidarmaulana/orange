@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
-import { fetchWalletData, fetchWalletTxs, fetchBTCRates } from '../api/blockstream';
+import { fetchWalletData, fetchWalletTxs } from '../api/blockstream';
+import { fetchBTCRates } from '../api/coingecko';
 import PaginationTx from './PaginationTx.vue';
 import Qrcode from 'qrcode.vue';
 import ModalTransaction from './ModalTransaction.vue';
 import CurrencySelector from './CurrencySelector.vue';
-import { FileDown, FileJson, Copy, ExternalLink } from 'lucide-vue-next';
+import { FileDown, FileJson, Copy, ExternalLink, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import { formatCurrency } from '../utils/currency';
 
 const props = defineProps<{ 
@@ -121,6 +122,8 @@ function exportTxsToJSON(txs: any[]) {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+const isTxsExpanded = ref(true)
 </script>
 
 <template>
@@ -230,28 +233,39 @@ function exportTxsToJSON(txs: any[]) {
 
           <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
 
-          <h3 class="mt-6 text-orange-950 dark:text-orange-50 text-start">Latest Transactions</h3>
-          <div v-if="isLoadingTxs">
-            <div class="transactions-scroll">
-              <ul class="text-start">
-                <li v-for="n in 5" :key="n">
-                  <div class="p-2 mb-2 bg-slate-200 rounded">
-                    <div class="skeleton skeleton-line w-5/6 mb-1"></div>
-                    <div class="skeleton skeleton-line w-2/3 mb-1"></div>
-                    <div class="skeleton skeleton-line w-1/2 mb-1"></div>
-                    <div class="skeleton skeleton-line w-1/2 mb-1"></div>
-                    <div class="skeleton skeleton-line w-1/3 mb-1"></div>
-                    <div class="skeleton skeleton-line w-1/3 mb-1"></div>
-                  </div>
-                </li>
-              </ul>
+          <div 
+            @click="isTxsExpanded = !isTxsExpanded"
+            class="flex justify-between items-center cursor-pointer mt-4 py-2 select-none">
+            <h3 class="text-orange-950 dark:text-orange-50 text-start m-0">Latest Transactions</h3>
+            <div class="text-orange-950 dark:text-orange-50 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+              <ChevronUp v-if="isTxsExpanded" :size="20" />
+              <ChevronDown v-else :size="20" />
             </div>
           </div>
-          
-          <div v-else-if="errorTxs">Error: {{ errorTxs.message }}</div>
 
-          <div v-else>
-            <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
+          <transition name="fade">
+            <div v-if="isTxsExpanded" class="mt-2">
+              <div v-if="isLoadingTxs">
+                <div class="transactions-scroll">
+                  <ul class="text-start">
+                    <li v-for="n in 5" :key="n">
+                      <div class="p-2 mb-2 bg-slate-200 rounded">
+                        <div class="skeleton skeleton-line w-5/6 mb-1"></div>
+                        <div class="skeleton skeleton-line w-2/3 mb-1"></div>
+                        <div class="skeleton skeleton-line w-1/2 mb-1"></div>
+                        <div class="skeleton skeleton-line w-1/2 mb-1"></div>
+                        <div class="skeleton skeleton-line w-1/3 mb-1"></div>
+                        <div class="skeleton skeleton-line w-1/3 mb-1"></div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div v-else-if="errorTxs">Error: {{ errorTxs.message }}</div>
+
+              <div v-else>
+                <PaginationTx :txs="txs" :perPages="5" v-slot="{tx}">
               <div class="p-2 mb-2 bg-slate-100 border border-gray-300 dark:bg-slate-600 rounded-md dark:border dark:border-gray-600">
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
@@ -404,13 +418,15 @@ function exportTxsToJSON(txs: any[]) {
                   </ModalTransaction>
                 </div>
             </PaginationTx>
+            </div>
+            </div>
+          </transition>
 
              <transition name="fade">
               <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-orange-600 text-white px-4 py-2 rounded shadow-lg z-50">
                 Copied Address to clipboard!
               </div>
              </transition>
-          </div>
         </div>
       </div>
       
