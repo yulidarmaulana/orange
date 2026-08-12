@@ -4,6 +4,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import CardHero from './components/CardHero.vue'
 import DarkModeToggle from './components/DarkModeToggle.vue'
 import { Search, Star, Bookmark, Trash2, X } from 'lucide-vue-next'
+import { getWalletMetadata } from './utils/labels'
 
 const searchInput = ref('')
 const activeAddress = ref('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
@@ -85,16 +86,25 @@ function selectWatchlistAddress(addr: string) {
                 :key="addr" 
                 class="flex items-center justify-between py-3 hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors px-2 rounded-lg"
               >
-                <button 
-                  @click="selectWatchlistAddress(addr)"
-                  class="text-xs font-mono text-left truncate flex-1 hover:text-orange-500 dark:hover:text-orange-400 text-slate-700 dark:text-slate-200 cursor-pointer mr-3"
-                  :title="addr"
-                >
-                  {{ addr.substring(0, 12) }}...{{ addr.substring(addr.length - 12) }}
-                </button>
+                <div class="flex-1 min-w-0 mr-3">
+                  <button 
+                    @click="selectWatchlistAddress(addr)"
+                    class="text-left w-full cursor-pointer hover:text-orange-500 dark:hover:text-orange-400 group"
+                  >
+                    <div v-if="getWalletMetadata(addr).label" class="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">
+                      {{ getWalletMetadata(addr).label }}
+                    </div>
+                    <div 
+                      class="font-mono text-xs text-slate-500 dark:text-slate-400"
+                      :class="getWalletMetadata(addr).label ? 'mt-0.5' : 'text-sm font-medium py-1'"
+                    >
+                      {{ addr.substring(0, 12) }}...{{ addr.substring(addr.length - 12) }}
+                    </div>
+                  </button>
+                </div>
                 <button 
                   @click="toggleWatchlist(addr)"
-                  class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors cursor-pointer"
+                  class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors cursor-pointer flex-shrink-0"
                   title="Remove from watchlist"
                 >
                   <Trash2 :size="14" />

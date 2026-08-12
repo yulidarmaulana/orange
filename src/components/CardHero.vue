@@ -7,8 +7,9 @@ import PaginationTx from './PaginationTx.vue';
 import Qrcode from 'qrcode.vue';
 import ModalTransaction from './ModalTransaction.vue';
 import CurrencySelector from './CurrencySelector.vue';
-import { FileDown, FileJson, Copy, ExternalLink, ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { FileDown, FileJson, Copy, ExternalLink, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-vue-next';
 import { formatCurrency } from '../utils/currency';
+import { getWalletMetadata, saveWalletMetadata } from '../utils/labels';
 
 const props = defineProps<{ 
   walletAddress: string 
@@ -68,6 +69,28 @@ const {
   staleTime: 1000 * 60 * 5,
   enabled: computed(() => !!props.walletAddress),
 })
+
+// Edit label/notes state
+const isEditingMetadata = ref(false)
+const editLabel = ref('')
+const editNotes = ref('')
+
+const currentMetadata = computed(() => getWalletMetadata(props.walletAddress))
+
+function startEditing() {
+  editLabel.value = currentMetadata.value.label
+  editNotes.value = currentMetadata.value.notes
+  isEditingMetadata.value = true
+}
+
+function cancelEditing() {
+  isEditingMetadata.value = false
+}
+
+function handleSaveMetadata() {
+  saveWalletMetadata(props.walletAddress, editLabel.value, editNotes.value)
+  isEditingMetadata.value = false
+}
 
 const copyAlert = ref(false)
 function copyToClipboard(text: string, showAlert = false) {
@@ -156,22 +179,88 @@ const isTxsExpanded = ref(true)
         </div>
         <div v-else-if="error">Error: {{ error.message }}</div>
         <div v-else>
-          <ul class="text-start flex flex-col">
-            <div class="">
-            <li>
-              <strong class="text-orange-950 dark:text-orange-50">Address:</strong> 
-                <br>
-               <span class="text-orange-950 dark:text-orange-50">{{ props.walletAddress }}</span>              
-                <button
-                @click="copyToClipboard(props.walletAddress, true)"
-                class="ml-2 p-2 bg-slate-300 dark:bg-slate-500 rounded hover:bg-slate-500 dark:hover:bg-slate-400 cursor-pointer transition-colors"
-                title="Copy Address"
+          <!-- Wallet Header (Label, Address, Edit Metadata Form) -->
+          <div class="mb-6 p-4 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100">
+            <div v-if="!isEditingMetadata">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-baseline gap-2.5">
+                  <h2 class="text-xl font-bold text-orange-950 dark:text-orange-50">
+                    {{ currentMetadata.label || 'Unnamed Wallet' }}
+                  </h2>
+                  <span v-if="!currentMetadata.label" class="text-xs text-orange-950/60 dark:text-orange-50/60">(No label set)</span>
+                </div>
+                <button 
+                  @click="startEditing"
+                  class="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
                 >
-                  <Copy :size="12" class="text-orange-950 dark:text-orange-50" />
+                  <Pencil :size="14" />
                 </button>
-            </li>
+              </div>
+              
+              <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs font-mono break-all text-slate-800 dark:text-slate-200 bg-slate-300/40 dark:bg-slate-700/40 px-2 py-1 rounded">
+                  {{ props.walletAddress }}
+                </span>
+                <button
+                  @click="copyToClipboard(props.walletAddress, true)"
+                  class="p-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 rounded transition-colors cursor-pointer text-slate-800 dark:text-slate-200"
+                  title="Copy Address"
+                >
+                  <Copy :size="12" />
+                </button>
+              </div>
+
+              <!-- Notes Display -->
+              <div v-if="currentMetadata.notes" class="mt-4 pt-3 border-t border-slate-300 dark:border-slate-600 text-left">
+                <strong class="text-xs uppercase tracking-wider text-orange-950 dark:text-orange-50">Notes:</strong>
+                <p class="mt-1 text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                  {{ currentMetadata.notes }}
+                </p>
+              </div>
             </div>
-          </ul>
+
+            <!-- Editing Metadata Form -->
+            <div v-else class="space-y-3.5 text-left">
+              <h3 class="text-sm font-bold text-orange-950 dark:text-orange-50 uppercase tracking-wider">Edit Wallet Info</h3>
+              
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-orange-950 dark:text-orange-50">Wallet Name / Label</label>
+                <input 
+                  v-model="editLabel"
+                  type="text"
+                  placeholder="e.g. Satoshi Genesis Wallet"
+                  class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-orange-950 dark:text-orange-50">Notes</label>
+                <textarea 
+                  v-model="editNotes"
+                  rows="3"
+                  placeholder="Add custom notes about this wallet (e.g. purpose, owner, transaction records)"
+                  class="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-orange-500 resize-none font-sans"
+                ></textarea>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-1.5">
+                <button 
+                  @click="cancelEditing"
+                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
+                >
+                  <X :size="12" />
+                  Cancel
+                </button>
+                <button 
+                  @click="handleSaveMetadata"
+                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-colors cursor-pointer"
+                >
+                  <Check :size="12" />
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div class="flex flex-col md:flex-row gap-2">
             <div class="">
@@ -189,23 +278,23 @@ const isTxsExpanded = ref(true)
                     </div>
                   </div>
                   <span class="text-orange-950 dark:text-orange-100">
-                    <span class="text-orange-500 font-bold">{{ ((data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000).toFixed(8) }}</span> BTC | {{ formatSelectedCurrency(finalBalanceFiat) }}
+                    <span class="text-orange-500 font-bold">{{ (((data?.chain_stats?.funded_txo_sum ?? 0) - (data?.chain_stats?.spent_txo_sum ?? 0)) / 100000000).toFixed(8) }}</span> BTC | {{ formatSelectedCurrency(finalBalanceFiat) }}
                   </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                   <div class="border border-gray-300 rounded-lg py-2 text-center mb-0 flex flex-col">
                     <strong class="text-xs text-orange-950 dark:text-orange-100">Total Received</strong>
-                      <span class="text-md text-orange-950 dark:text-orange-100 px-2">{{ (data.chain_stats.funded_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                      <span class="text-md text-orange-950 dark:text-orange-100 px-2">{{ ((data?.chain_stats?.funded_txo_sum ?? 0) / 100000000).toFixed(8) }} BTC</span> 
                   </div>
                   <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
                     <strong class="text-xs text-orange-950 dark:text-orange-100">Transactions</strong>
-                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ data.chain_stats.tx_count }}</span> 
+                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ data?.chain_stats?.tx_count ?? 0 }}</span> 
                   </div>
               
                   <div class="border border-gray-300 rounded-lg py-2 text-center flex flex-col">
                     <strong class="text-xs text-orange-950 dark:text-orange-100">Total Sent</strong>
-                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ (data.chain_stats.spent_txo_sum / 100000000).toFixed(8) }} BTC</span> 
+                    <span class="text-orange-950 dark:text-orange-100 px-2">{{ ((data?.chain_stats?.spent_txo_sum ?? 0) / 100000000).toFixed(8) }} BTC</span> 
                   </div>
                 </div>
             </div>
