@@ -55,3 +55,25 @@ export const fetchWalletTxs = async ({ queryKey }: { queryKey: any }) => {
     }
   })
 }
+
+export const fetchWalletUTXOs = async ({ queryKey }: { queryKey: any }) => {
+  const [_key, address] = queryKey
+  const res = await fetch(`https://api.blockcypher.com/v1/btc/main/addrs/${address}?unspentOnly=true`)
+  if (!res.ok) throw new Error('Network response was not ok')
+  const data = await res.json()
+  
+  // Combine confirmed and unconfirmed UTXOs
+  const utxos = [
+    ...(data.txrefs || []),
+    ...(data.unconfirmed_txrefs || [])
+  ]
+
+  // Map to a cleaner format
+  return utxos.map((utxo: any) => ({
+    txid: utxo.tx_hash,
+    vout: utxo.tx_output_n,
+    value: utxo.value,
+    confirmations: utxo.confirmations || 0,
+    confirmedAt: utxo.confirmed || null,
+  }))
+}
