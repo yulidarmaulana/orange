@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import CardHero from './components/CardHero.vue'
+import BitcoinSnapshot from './components/BitcoinSnapshot.vue'
 import DarkModeToggle from './components/DarkModeToggle.vue'
-import { Search, Star, Bookmark, Trash2, X } from 'lucide-vue-next'
+import { Search, Star, Bookmark, Trash2, X, Wallet, ArrowLeft } from 'lucide-vue-next'
 import { getWalletMetadata } from './utils/labels'
+
+type View = 'home' | 'tracker'
+const currentView = ref<View>(location.hash === '#/tracker' ? 'tracker' : 'home')
+const syncView = () => { currentView.value = location.hash === '#/tracker' ? 'tracker' : 'home' }
+onMounted(() => window.addEventListener('hashchange', syncView))
+onUnmounted(() => window.removeEventListener('hashchange', syncView))
 
 const searchInput = ref('')
 const activeAddress = ref('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
@@ -130,11 +137,28 @@ function selectWatchlistAddress(addr: string) {
       </div>
     </transition>
 
-    <div class="flex justify-between items-center mb-4">
+    <div class="flex justify-between items-center gap-2 mb-4">
       <HelloWorld />
       
-      <div class="flex items-center gap-2 relative">
+      <div class="flex items-center gap-1.5 sm:gap-2 relative">
+        <a
+          v-if="currentView === 'home'"
+          href="#/tracker"
+          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors"
+        >
+          <Wallet :size="16" class="text-white" />
+          <span class="text-white">Track Wallet</span>
+        </a>
+        <a
+          v-else
+          href="#/"
+          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-semibold transition-colors"
+        >
+          <ArrowLeft :size="16" aria-label="Back to snapshot" />
+          <span class="hidden sm:inline font-mono text-xs tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400">Snapshot</span>
+        </a>
         <button 
+          v-if="currentView === 'tracker'"
           @click="isWatchlistModalOpen = true"
           class="relative p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer text-slate-700 dark:text-slate-200 shadow-xs"
           title="Watchlist"
@@ -152,19 +176,21 @@ function selectWatchlistAddress(addr: string) {
       </div>
     </div>
     
-    <div class="mb-4 bg-slate-50 dark:bg-slate-700 text-white p-2 rounded-lg shadow-xs flex gap-2">
+    <BitcoinSnapshot v-if="currentView === 'home'" />
+    <template v-else>
+    <div class="mb-4 bg-slate-50 dark:bg-slate-700 text-white p-2 rounded-lg shadow-xs flex flex-wrap sm:flex-nowrap gap-2">
       <input
         v-model="searchInput"
         type="text"
         placeholder="Enter Bitcoin wallet address"
-        class="border border-slate-300 rounded px-2 py-1 flex-grow bg-slate-200 text-slate-800 focus:outline-none focus:border-orange-500"
+        class="border border-slate-300 rounded px-2 py-1 min-w-0 w-full basis-full sm:basis-0 sm:flex-grow bg-slate-200 text-slate-800 focus:outline-none focus:border-orange-500"
         @keyup.enter="handleSearch"
       />
       
       <!-- Star/Bookmark Button -->
       <button
         @click="toggleWatchlist(activeAddress)"
-        class="p-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800"
+        class="p-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center shrink-0 border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800"
         :class="isInWatchlist(activeAddress) ? 'text-yellow-500 hover:text-yellow-600' : 'text-slate-400 hover:text-slate-500'"
         title="Bookmark active address"
       >
@@ -173,13 +199,14 @@ function selectWatchlistAddress(addr: string) {
 
       <button
         @click="handleSearch"
-        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1 rounded-lg flex flex-1 sm:flex-none justify-center items-center gap-1.5 transition-colors cursor-pointer"
       >
         <Search :size="16" />
         Search
       </button>
     </div>
     <CardHero :wallet-address="activeAddress" />
+    </template>
   </div>
 </template>
 

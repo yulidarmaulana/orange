@@ -17,7 +17,7 @@
 }
 
 :root.dark {
-  background-color: #242424;
+  background-color: #09090B;
   color: rgba(255, 255, 255, 0.87);
 }
 
@@ -71,8 +71,14 @@ button:focus-visible {
 #app {
   /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
+}
+
+@media (min-width: 640px) {
+  #app {
+    padding: 2rem;
+  }
 }
 
 @media (prefers-color-scheme: light) {
