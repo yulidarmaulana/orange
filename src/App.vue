@@ -144,7 +144,7 @@ function selectWatchlistAddress(addr: string) {
         <a
           v-if="currentView === 'home'"
           href="#/tracker"
-          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors"
+          class="flex items-center gap-1.5 px-2 sm:px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors"
         >
           <Wallet :size="16" class="text-white" />
           <span class="text-white">Track Wallet</span>

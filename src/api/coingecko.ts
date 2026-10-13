@@ -16,7 +16,14 @@ export interface BTCSnapshot {
   blockHeight: number
 }
 
-export const fetchBTCSnapshot = async (): Promise<BTCSnapshot> => {
+export const fetchBTCChart24h = async (): Promise<number[]> => {
+  const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1')
+  if (!res.ok) throw new Error('Failed to fetch BTC chart')
+  const data = await res.json()
+  return (data.prices as [number, number][]).map(([, price]) => price)
+}
+
+export const fetchBTCSnapshot =async (): Promise<BTCSnapshot> => {
   const [coinRes, heightRes] = await Promise.all([
     fetch('https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&community_data=false&developer_data=false'),
     fetch('https://blockstream.info/api/blocks/tip/height'),

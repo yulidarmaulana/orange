@@ -35,11 +35,11 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all max-h-[90vh] flex flex-col"
+              class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all max-h-[90vh] flex flex-col dark:bg-slate-900"
             >
               <DialogTitle
                 as="h3"
-                class="text-lg font-semibold leading-6 text-gray-900 flex-shrink-0"
+                class="text-lg font-semibold leading-6 text-gray-900 flex-shrink-0 dark:text-slate-100"
               >
                 Transaction Details
               </DialogTitle>

@@ -166,7 +166,7 @@ const isTxsExpanded = ref(true)
 <template>
   <Suspense>
     <template #default>
-      <div class="bg-slate-50 dark:bg-slate-700 text-white p-4 rounded-lg shadow-md">
+      <div class="bg-slate-50 dark:bg-slate-700 text-white p-3 sm:p-4 rounded-lg shadow-md">
         <div v-if="isLoading">
           <ul class="text-start">
             <li class="skeleton skeleton-line w-2/3"></li>
@@ -194,11 +194,11 @@ const isTxsExpanded = ref(true)
         <div v-else-if="error">Error: {{ error.message }}</div>
         <div v-else>
           <!-- Wallet Header (Label, Address, Edit Metadata Form) -->
-          <div class="mb-6 p-4 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100">
+          <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100">
             <div v-if="!isEditingMetadata">
               <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-baseline gap-2.5">
-                  <h2 class="text-xl font-bold text-orange-950 dark:text-orange-50">
+                <div class="flex flex-wrap items-baseline gap-x-2.5 min-w-0">
+                  <h2 class="text-lg sm:text-xl break-words min-w-0 font-bold text-orange-950 dark:text-orange-50">
                     {{ currentMetadata.label || 'Unnamed Wallet' }}
                   </h2>
                   <span v-if="!currentMetadata.label" class="text-xs text-orange-950/60 dark:text-orange-50/60">(No label set)</span>
@@ -211,13 +211,13 @@ const isTxsExpanded = ref(true)
                 </button>
               </div>
               
-              <div class="mt-2 flex items-center gap-2">
-                <span class="text-xs font-mono break-all text-slate-800 dark:text-slate-200 bg-slate-300/40 dark:bg-slate-700/40 px-2 py-1 rounded">
+              <div class="mt-2 flex items-start sm:items-center gap-2">
+                <span class="min-w-0 text-xs font-mono break-all text-slate-800 dark:text-slate-200 bg-slate-300/40 dark:bg-slate-700/40 px-2 py-1 rounded">
                   {{ props.walletAddress }}
                 </span>
                 <button
                   @click="copyToClipboard(props.walletAddress, true)"
-                  class="p-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 rounded transition-colors cursor-pointer text-slate-800 dark:text-slate-200"
+                  class="shrink-0 p-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 rounded transition-colors cursor-pointer text-slate-800 dark:text-slate-200"
                   title="Copy Address"
                 >
                   <Copy :size="12" />
@@ -277,21 +277,21 @@ const isTxsExpanded = ref(true)
           </div>
 
           <div class="flex flex-col md:flex-row gap-2">
-            <div class="">
+            <div class="shrink-0">
               <div class="flex justify-center p-2 border border-gray-300 rounded-lg">
               <Qrcode :value="props.walletAddress" :size="120" class="rounded-lg shadow-md" />
               </div>
             </div>
 
-            <div class="basis-full">
+            <div class="basis-full min-w-0">
                 <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 flex flex-col text-start gap-2">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between gap-2">
                     <strong class="text-orange-950 dark:text-orange-100">Final Balance</strong>
-                    <div class="w-32">
+                    <div class="w-28 sm:w-32 shrink-0">
                       <CurrencySelector v-model="selectedCurrency" />
                     </div>
                   </div>
-                  <span class="text-orange-950 dark:text-orange-100">
+                  <span class="text-orange-950 dark:text-orange-100 break-words text-sm sm:text-base">
                     <span class="text-orange-500 font-bold">{{ (((data?.chain_stats?.funded_txo_sum ?? 0) - (data?.chain_stats?.spent_txo_sum ?? 0)) / 100000000).toFixed(8) }}</span> BTC | {{ formatSelectedCurrency(finalBalanceFiat) }}
                   </span>
                 </div>
@@ -317,7 +317,7 @@ const isTxsExpanded = ref(true)
 
           
 
-          <div class="flex gap-2 my-2 justify-start">
+          <div class="flex flex-wrap gap-2 my-2 justify-start">
             <button
               @click="exportTxsToCSV(txs)"
               class="px-3 py-2 text-xs font-medium text-center flex gap-1 items-center align-middle text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -337,8 +337,8 @@ const isTxsExpanded = ref(true)
           <hr class="my-4 h-0.5 border-t-0 bg-neutral-100 dark:bg-white/10" />
 
           <div class="flex justify-between items-center mt-4 border-b border-slate-200 dark:border-slate-700 select-none">
-            <div class="flex gap-6">
-              <button 
+            <div class="flex gap-4 sm:gap-6">
+              <button
                 @click="activeTab = 'txs'"
                 class="pb-2 text-sm font-semibold transition-colors border-b-2 cursor-pointer"
                 :class="activeTab === 'txs' ? 'border-orange-600 text-orange-950 dark:text-orange-50' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'"
@@ -391,7 +391,7 @@ const isTxsExpanded = ref(true)
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <strong class="text-orange-950 dark:text-orange-100">TxID:</strong> 
-                    <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-600 hover:text-blue-800">
+                    <a :href="`https://blockstream.info/tx/${tx.txid}`" target="_blank" rel="noopener" class="no-underline text-blue-600 hover:text-blue-800 break-all">
                       {{ tx.txid.substring(0, 30) }}...
                     </a>
                   </div>
@@ -402,7 +402,7 @@ const isTxsExpanded = ref(true)
                   {{ tx.status.confirmed ? 'Confirmed' : 'Unconfirmed' }}
                 </span><br>
                 
-                <div class="flex">
+                <div class="flex flex-wrap">
                   <strong class="text-orange-950 dark:text-orange-100">Time: </strong>
                     <span class="text-orange-900 dark:text-orange-200 ms-1" v-if="tx.status.block_time">
                     {{
@@ -437,7 +437,7 @@ const isTxsExpanded = ref(true)
                           </div>
                         </div>
                         
-                        <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
                           <div>
                             <span class="font-medium text-gray-700">Status:</span>
                             <span :class="tx.status.confirmed ? 'text-green-600' : 'text-orange-600'" class="ml-2">
@@ -473,7 +473,7 @@ const isTxsExpanded = ref(true)
                       </div>
 
                       <!-- Transaction Summary -->
-                      <div class="grid grid-cols-3 gap-3">
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="bg-blue-50 p-3 rounded text-center">
                           <div class="text-xs text-blue-600 font-medium">Input</div>
                           <div class="text-sm font-bold">{{ formatBTC(getTxInputTotal(tx)) }} BTC</div>
@@ -511,7 +511,7 @@ const isTxsExpanded = ref(true)
                         <div class="max-h-32 overflow-y-auto space-y-2">
                           <div v-for="(output, index) in tx.vout.slice(0, 3)" :key="index" class="bg-gray-50 p-2 rounded text-xs">
                             <div class="flex justify-between items-start">
-                              <div class="flex-1">
+                              <div class="flex-1 min-w-0">
                                 <div class="font-mono break-all">{{ output.scriptpubkey_address || 'N/A' }}</div>
                                 <div class="text-gray-600">{{ output.scriptpubkey_type || 'Unknown' }}</div>
                               </div>
@@ -564,7 +564,7 @@ const isTxsExpanded = ref(true)
                 <div v-else class="transactions-scroll space-y-3">
                   <div v-for="(utxo, index) in utxos" :key="index" class="p-3 bg-slate-100 border border-gray-300 dark:bg-slate-700/50 rounded-lg dark:border dark:border-slate-600 text-left">
                     <div class="flex justify-between items-start mb-2">
-                      <div class="flex-1">
+                      <div class="flex-1 min-w-0">
                         <strong class="text-xs text-orange-950 dark:text-orange-100 uppercase tracking-wider">Output Reference</strong>
                         <div class="flex items-center gap-2 mt-1">
                           <a :href="`https://blockstream.info/tx/${utxo.txid}`" target="_blank" rel="noopener" class="font-mono text-xs text-blue-600 hover:text-blue-800 break-all bg-white dark:bg-slate-800 px-2 py-1 rounded">
@@ -599,7 +599,7 @@ const isTxsExpanded = ref(true)
           </transition>
 
              <transition name="fade">
-              <div v-if="copyAlert" class="fixed bottom-6 right-6 bg-orange-600 text-white px-4 py-2 rounded shadow-lg z-50">
+              <div v-if="copyAlert" class="fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 text-center bg-orange-600 text-white px-4 py-2 rounded shadow-lg z-50">
                 Copied Address to clipboard!
               </div>
              </transition>
